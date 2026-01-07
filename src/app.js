@@ -8,7 +8,7 @@ app.use(express.json());
 connectDB();
 
 app.use("/api/auth", require("./routes/auth.routes"));
-
+app.use("/api/foods", require("./routes/food.routes"));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
