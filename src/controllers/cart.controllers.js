@@ -10,7 +10,9 @@ exports.addToCart = async (req, res) => {
     const { userId, foodId, quantity } = req.body;
 
     if (!userId || !foodId || !quantity) {
-      return res.status(400).json({ message: "userId, foodId, quantity required" });
+      return res
+        .status(400)
+        .json({ message: "userId, foodId, quantity required" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -18,17 +20,23 @@ exports.addToCart = async (req, res) => {
     }
 
     const food = await Food.findOne({ foodId });
-    if (!food) return res.status(404).json({ message: "Food not found" });
-
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-
-    let cart = await Cart.findOne({ userId: userObjectId });
-
-    if (!cart) {
-      cart = new Cart({ userId: userObjectId, items: [], totalAmount: 0 });
+    if (!food) {
+      return res.status(404).json({ message: "Food not found" });
     }
 
-    const item = cart.items.find(i => i.foodId === foodId);
+    let cart = await Cart.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+
+    if (!cart) {
+      cart = new Cart({
+        userId: new mongoose.Types.ObjectId(userId),
+        items: [],
+        totalAmount: 0,
+      });
+    }
+
+    const item = cart.items.find((i) => i.foodId === foodId);
 
     if (item) {
       item.quantity += Number(quantity);
@@ -38,7 +46,7 @@ exports.addToCart = async (req, res) => {
         name: food.name,
         image: food.image,
         price: food.price,
-        quantity: Number(quantity)
+        quantity: Number(quantity),
       });
     }
 
@@ -49,7 +57,6 @@ exports.addToCart = async (req, res) => {
 
     await cart.save();
     res.status(200).json(cart);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -62,13 +69,21 @@ exports.getCart = async (req, res) => {
   try {
     const { userId } = req.query;
 
-    if (!userId) return res.status(400).json({ message: "userId required" });
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid userId" });
+    }
 
     const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId)
+      userId: new mongoose.Types.ObjectId(userId),
     });
 
-    if (!cart) return res.json({ items: [], totalAmount: 0 });
+    if (!cart) {
+      return res.json({ items: [], totalAmount: 0 });
+    }
 
     res.json(cart);
   } catch (err) {
@@ -84,17 +99,27 @@ exports.updateCartItem = async (req, res) => {
     const { userId, foodId, quantity } = req.body;
 
     if (!userId || !foodId || quantity === undefined) {
-      return res.status(400).json({ message: "userId, foodId, quantity required" });
+      return res
+        .status(400)
+        .json({ message: "userId, foodId, quantity required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid userId" });
     }
 
     const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId)
+      userId: new mongoose.Types.ObjectId(userId),
     });
 
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
-    const item = cart.items.find(i => i.foodId === foodId);
-    if (!item) return res.status(404).json({ message: "Item not found" });
+    const item = cart.items.find((i) => i.foodId === foodId);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
 
     item.quantity = Number(quantity);
 
@@ -105,7 +130,6 @@ exports.updateCartItem = async (req, res) => {
 
     await cart.save();
     res.json({ message: "Cart updated", cart });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -119,16 +143,24 @@ exports.removeItemFromCart = async (req, res) => {
     const { userId, foodId } = req.query;
 
     if (!userId || !foodId) {
-      return res.status(400).json({ message: "userId & foodId required" });
+      return res
+        .status(400)
+        .json({ message: "userId & foodId required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid userId" });
     }
 
     const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId)
+      userId: new mongoose.Types.ObjectId(userId),
     });
 
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
-    cart.items = cart.items.filter(i => i.foodId !== foodId);
+    cart.items = cart.items.filter((i) => i.foodId !== foodId);
 
     cart.totalAmount = cart.items.reduce(
       (sum, i) => sum + i.price * i.quantity,
@@ -137,7 +169,6 @@ exports.removeItemFromCart = async (req, res) => {
 
     await cart.save();
     res.json(cart);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -150,18 +181,27 @@ exports.clearCart = async (req, res) => {
   try {
     const { userId } = req.query;
 
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid userId" });
+    }
+
     const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId)
+      userId: new mongoose.Types.ObjectId(userId),
     });
 
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
     cart.items = [];
     cart.totalAmount = 0;
+
     await cart.save();
-
     res.json({ message: "Cart cleared successfully" });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

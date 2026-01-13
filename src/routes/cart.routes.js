@@ -6,7 +6,7 @@ const {
   getCart,
   updateCartItem,
   removeItemFromCart,
-  clearCart
+  clearCart,
 } = require("../controllers/cart.controllers");
 
 // Task 16
