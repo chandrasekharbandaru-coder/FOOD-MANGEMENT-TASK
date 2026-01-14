@@ -110,6 +110,9 @@ exports.getCart = async (req, res) => {
 /* ================================
    Task 18: Update Cart Item
 ================================ */
+/* ================================
+   Task 18: Update Cart Item
+================================ */
 exports.updateCartItem = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -121,35 +124,40 @@ exports.updateCartItem = async (req, res) => {
         .json({ message: "foodId and quantity required" });
     }
 
+    if (Number(quantity) < 0) {
+      return res.status(400).json({ message: "Quantity cannot be negative" });
+    }
+
     const cart = await Cart.findOne({ userId });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-섭
-    const item = cart.items.find(
-      (i) => i.foodId.toString() === foodId
+    const itemIndex = cart.items.findIndex(
+      (item) => item.foodId.toString() === foodId
     );
 
-    if (!item) {
+    if (itemIndex === -1) {
       return res.status(404).json({ message: "Item not found" });
     }
 
     if (Number(quantity) === 0) {
-      cart.items = cart.items.filter(
-        (i) => i.foodId.toString() !== foodId
-      );
+      cart.items.splice(itemIndex, 1); // remove item
     } else {
-      item.quantity = Number(quantity);
+      cart.items[itemIndex].quantity = Number(quantity);
     }
 
     cart.totalAmount = cart.items.reduce(
-      (sum, i) => sum + i.price * i.quantity,
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
 
     await cart.save();
-    res.json({ message: "Cart updated successfully", cart });
+
+    res.json({
+      message: "Cart updated successfully",
+      cart,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
