@@ -11,12 +11,12 @@ exports.addToCart = async (req, res) => {
     const tokenUserId = req.user.id;
 
     if (!userId || !foodId || quantity === undefined) {
-      return res
-        .status(400)
-        .json({ message: "userId, foodId, quantity required" });
+      return res.status(400).json({
+        message: "userId, foodId, quantity required",
+      });
     }
 
-    // 🔐 JWT validation
+    // 🔐 JWT check
     if (userId !== tokenUserId) {
       return res.status(403).json({ message: "User ID mismatch" });
     }
@@ -26,10 +26,24 @@ exports.addToCart = async (req, res) => {
     }
 
     if (Number(quantity) <= 0) {
-      return res.status(400).json({ message: "Quantity must be greater than 0" });
+      return res.status(400).json({
+        message: "Quantity must be greater than 0",
+      });
     }
 
-    const food = await Food.findById(foodId);
+    /* ✅ FIXED FOOD LOOKUP */
+    let food;
+
+    // Try Mongo _id
+    if (mongoose.Types.ObjectId.isValid(foodId)) {
+      food = await Food.findById(foodId);
+    }
+
+    // Try custom foodId
+    if (!food) {
+      food = await Food.findOne({ foodId });
+    }
+
     if (!food) {
       return res.status(404).json({ message: "Food not found" });
     }
@@ -45,14 +59,16 @@ exports.addToCart = async (req, res) => {
     }
 
     const existingItem = cart.items.find(
-      (item) => item.foodId.toString() === foodId
+      (item) =>
+        item.foodId.toString() === food._id.toString() ||
+        item.foodId === food.foodId
     );
 
     if (existingItem) {
       existingItem.quantity += Number(quantity);
     } else {
       cart.items.push({
-        foodId,
+        foodId: food._id,
         name: food.name,
         image: food.image,
         price: food.price,
@@ -73,7 +89,7 @@ exports.addToCart = async (req, res) => {
 };
 
 /* ================================
-   Task 17: Get User Cart (JWT)
+   Task 17: Get User Cart
 ================================ */
 exports.getCart = async (req, res) => {
   try {
@@ -110,6 +126,7 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
+섭
     const item = cart.items.find(
       (i) => i.foodId.toString() === foodId
     );
@@ -161,7 +178,7 @@ exports.removeItemFromCart = async (req, res) => {
     );
 
     await cart.save();
-    res.json(cart);
+    res.json({ message: "Item removed successfully", cart });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
