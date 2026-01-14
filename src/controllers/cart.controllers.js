@@ -8,38 +8,48 @@ const mongoose = require("mongoose");
 exports.addToCart = async (req, res) => {
   try {
     const { userId, foodId, quantity } = req.body;
+    const tokenUserId = req.user.id;
 
-    if (!userId || !foodId || !quantity) {
+    if (!userId || !foodId || quantity === undefined) {
       return res
         .status(400)
         .json({ message: "userId, foodId, quantity required" });
+    }
+
+    // 🔐 JWT validation
+    if (userId !== tokenUserId) {
+      return res.status(403).json({ message: "User ID mismatch" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid userId" });
     }
 
-    const food = await Food.findOne({ foodId });
+    if (Number(quantity) <= 0) {
+      return res.status(400).json({ message: "Quantity must be greater than 0" });
+    }
+
+    const food = await Food.findById(foodId);
     if (!food) {
       return res.status(404).json({ message: "Food not found" });
     }
 
-    let cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
+    let cart = await Cart.findOne({ userId: tokenUserId });
 
     if (!cart) {
       cart = new Cart({
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: tokenUserId,
         items: [],
         totalAmount: 0,
       });
     }
 
-    const item = cart.items.find((i) => i.foodId === foodId);
+    const existingItem = cart.items.find(
+      (item) => item.foodId.toString() === foodId
+    );
 
-    if (item) {
-      item.quantity += Number(quantity);
+    if (existingItem) {
+      existingItem.quantity += Number(quantity);
     } else {
       cart.items.push({
         foodId,
@@ -51,43 +61,33 @@ exports.addToCart = async (req, res) => {
     }
 
     cart.totalAmount = cart.items.reduce(
-      (sum, i) => sum + i.price * i.quantity,
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
 
     await cart.save();
     res.status(200).json(cart);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
 /* ================================
-   Task 17: Get User Cart
+   Task 17: Get User Cart (JWT)
 ================================ */
 exports.getCart = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.id;
 
-    if (!userId) {
-      return res.status(400).json({ message: "userId required" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
+    const cart = await Cart.findOne({ userId });
 
     if (!cart) {
       return res.json({ items: [], totalAmount: 0 });
     }
 
     res.json(cart);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -96,32 +96,35 @@ exports.getCart = async (req, res) => {
 ================================ */
 exports.updateCartItem = async (req, res) => {
   try {
-    const { userId, foodId, quantity } = req.body;
+    const userId = req.user.id;
+    const { foodId, quantity } = req.body;
 
-    if (!userId || !foodId || quantity === undefined) {
+    if (!foodId || quantity === undefined) {
       return res
         .status(400)
-        .json({ message: "userId, foodId, quantity required" });
+        .json({ message: "foodId and quantity required" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    const item = cart.items.find((i) => i.foodId === foodId);
+    const item = cart.items.find(
+      (i) => i.foodId.toString() === foodId
+    );
+
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    item.quantity = Number(quantity);
+    if (Number(quantity) === 0) {
+      cart.items = cart.items.filter(
+        (i) => i.foodId.toString() !== foodId
+      );
+    } else {
+      item.quantity = Number(quantity);
+    }
 
     cart.totalAmount = cart.items.reduce(
       (sum, i) => sum + i.price * i.quantity,
@@ -129,9 +132,9 @@ exports.updateCartItem = async (req, res) => {
     );
 
     await cart.save();
-    res.json({ message: "Cart updated", cart });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json({ message: "Cart updated successfully", cart });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -140,27 +143,17 @@ exports.updateCartItem = async (req, res) => {
 ================================ */
 exports.removeItemFromCart = async (req, res) => {
   try {
-    const { userId, foodId } = req.query;
+    const userId = req.user.id;
+    const { foodId } = req.params;
 
-    if (!userId || !foodId) {
-      return res
-        .status(400)
-        .json({ message: "userId & foodId required" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    cart.items = cart.items.filter((i) => i.foodId !== foodId);
+    cart.items = cart.items.filter(
+      (item) => item.foodId.toString() !== foodId
+    );
 
     cart.totalAmount = cart.items.reduce(
       (sum, i) => sum + i.price * i.quantity,
@@ -169,8 +162,8 @@ exports.removeItemFromCart = async (req, res) => {
 
     await cart.save();
     res.json(cart);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -179,20 +172,9 @@ exports.removeItemFromCart = async (req, res) => {
 ================================ */
 exports.clearCart = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.user.id;
 
-    if (!userId) {
-      return res.status(400).json({ message: "userId required" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    const cart = await Cart.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-
+    const cart = await Cart.findOne({ userId });
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
@@ -202,7 +184,7 @@ exports.clearCart = async (req, res) => {
 
     await cart.save();
     res.json({ message: "Cart cleared successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
