@@ -16,6 +16,7 @@ connectDB();
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/foods", require("./routes/food.routes"));
 app.use("/api/cart", require("./routes/cart.routes"));
+app.use("/api/orders", require("./routes/order.routes"));
 
 // Health check
 app.get("/", (req, res) => {

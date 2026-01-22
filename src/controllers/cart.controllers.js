@@ -106,10 +106,6 @@ exports.getCart = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-/* ================================
-   Task 18: Update Cart Item
-================================ */
 /* ================================
    Task 18: Update Cart Item
 ================================ */
