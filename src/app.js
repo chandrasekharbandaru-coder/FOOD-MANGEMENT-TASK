@@ -1,20 +1,11 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-const cors = require("cors");
+
 
 dotenv.config();
 
 const app = express();
-
-// CORS middleware (VERY IMPORTANT)
-app.use(
-  cors({
-    origin: "http://localhost:5173", // frontend URL
-    credentials: true,
-  })
-);
-
 // Middleware
 app.use(express.json());
 
