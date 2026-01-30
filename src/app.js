@@ -27,7 +27,7 @@ app.use("/api/orders", require("./routes/order.routes"));
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
-
+console.log("Cashfree ENV:", process.env.CASHFREE_ENV);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);

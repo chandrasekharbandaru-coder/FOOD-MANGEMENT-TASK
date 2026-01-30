@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const orderItemSchema = new mongoose.Schema({
   foodId: String,
   name: String,
@@ -32,7 +31,6 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Confirmed", "Preparing", "Delivered", "Cancelled"],
       default: "Pending",
     },
-
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Failed"],
@@ -41,5 +39,4 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model("Order", orderSchema);
