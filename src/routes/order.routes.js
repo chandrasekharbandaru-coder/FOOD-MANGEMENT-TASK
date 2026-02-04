@@ -6,24 +6,19 @@ const {
   getMyOrders,
   getSingleOrder,
   updateOrderStatus,
-  verifyPayment
 } = require("../controllers/order.controller");
-
 const authMiddleware = require("../middleware/auth.middleware");
 
-// Task 22: Place order
+// Task 22
 router.post("/place", authMiddleware, placeOrder);
 
-// Task 23: Get logged-in user's orders
+// Task 23
 router.get("/my-orders", authMiddleware, getMyOrders);
 
-// Task 24: Get single order
+// Task 24
 router.get("/", authMiddleware, getSingleOrder);
 
-// Task 25: Update order status (admin)
+// Task 25
 router.put("/status", authMiddleware, updateOrderStatus);
-
-// Task 26: Verify payment
-router.post("/verify-payment", authMiddleware, verifyPayment);
 
 module.exports = router;

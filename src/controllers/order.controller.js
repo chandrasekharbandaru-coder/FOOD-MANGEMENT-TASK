@@ -3,16 +3,17 @@ const Cart = require("../models/cart.model");
 const mongoose = require("mongoose");
 
 /* =================================
-   Task 22: Place Order
+   Task 22: Place Order (JWT + userId)
    POST /api/orders/place
 ================================= */
 exports.placeOrder = async (req, res) => {
   try {
-    const userId = req.user.id; // from token
-    const { deliveryAddress } = req.body;
+    const { userId, deliveryAddress } = req.body;
 
-    if (!deliveryAddress) {
-      return res.status(400).json({ message: "deliveryAddress is required" });
+    if (!userId || !deliveryAddress) {
+      return res.status(400).json({
+        message: "userId and deliveryAddress are required",
+      });
     }
 
     const cart = await Cart.findOne({ userId });
@@ -35,13 +36,21 @@ exports.placeOrder = async (req, res) => {
       paymentStatus: "Pending",
     });
 
-    // clear cart
+    // Clear cart
     cart.items = [];
+    cart.totalAmount = 0;
     await cart.save();
 
     res.status(201).json({
-      message: "Order placed successfully",
-      order,
+      _id: order._id,
+      userId: order.userId,
+      items: order.items,
+      totalAmount: order.totalAmount,
+      deliveryAddress: order.deliveryAddress,
+      orderStatus: order.orderStatus,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -56,8 +65,7 @@ exports.getMyOrders = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const orders = await Order.find({ userId })
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
     res.status(200).json({
       totalOrders: orders.length,
@@ -80,8 +88,7 @@ exports.getSingleOrder = async (req, res) => {
       return res.status(400).json({ message: "Valid orderId is required" });
     }
 
-    const order = await Order.findById(orderId)
-      .populate("userId", "name email");
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -94,7 +101,7 @@ exports.getSingleOrder = async (req, res) => {
 };
 
 /* =================================
-   Task 25: Update Order Status (Admin)
+   Task 25: Update Order Status
    PUT /api/orders/status
 ================================= */
 exports.updateOrderStatus = async (req, res) => {
@@ -105,7 +112,6 @@ exports.updateOrderStatus = async (req, res) => {
     const validStatus = [
       "Pending",
       "Confirmed",
-      "Preparing",
       "Delivered",
       "Cancelled",
     ];
@@ -129,39 +135,6 @@ exports.updateOrderStatus = async (req, res) => {
 
     res.status(200).json({
       message: "Order status updated successfully",
-      order,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-/* =================================
-   Task 26: Verify Payment (Placeholder)
-   POST /api/orders/verify-payment
-================================= */
-exports.verifyPayment = async (req, res) => {
-  try {
-    const { orderId } = req.body;
-
-    if (!orderId) {
-      return res.status(400).json({ message: "orderId is required" });
-    }
-
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    // Placeholder (Cashfree later)
-    order.paymentStatus = "Paid";
-    order.orderStatus = "Confirmed";
-
-    await order.save();
-
-    res.status(200).json({
-      message: "Payment verified successfully",
       order,
     });
   } catch (error) {
