@@ -3,9 +3,27 @@ const router = express.Router();
 
 const {
   createPaymentOrder,
-  checkPaymentStatus
+  verifyPaymentStatus
 } = require("../controllers/payment.controller");
 
-router.post("/create-order", createPaymentOrder);
+const authMiddleware = require("../middleware/auth.middleware");
+
+// ================================
+// CREATE CASHFREE ORDER
+// ================================
+router.post(
+  "/create-order",
+  authMiddleware,
+  createPaymentOrder
+);
+
+// ================================
+// VERIFY PAYMENT (NO WEBHOOK)
+// ================================
+router.post(
+  "/verify",
+  authMiddleware,
+  verifyPaymentStatus
+);
 
 module.exports = router;
