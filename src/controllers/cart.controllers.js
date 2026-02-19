@@ -88,9 +88,7 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-/* ================================
-   Task 17: Get User Cart
-================================ */
+//Task 17: Get User Cart
 exports.getCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -157,9 +155,7 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-/* ================================
-   Task 19: Remove Item from Cart
-================================ */
+//Task 19: Remove Item from Car
 exports.removeItemFromCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -186,9 +182,7 @@ exports.removeItemFromCart = async (req, res) => {
   }
 };
 
-/* ================================
-   Task 20: Clear Cart
-================================ */
+//Task 20: Clear Cart
 exports.clearCart = async (req, res) => {
   try {
     const userId = req.user.id;

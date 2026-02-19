@@ -1,7 +1,7 @@
 const Food = require("../models/food.model");
 const axios = require("../utils/axios");
 
-// ========== SYNC FOODS ==========
+//SYNC FOODS
 exports.syncFoods = async (req, res) => {
   try {
     if (req.user.role !== "admin") {

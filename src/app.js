@@ -18,10 +18,10 @@ app.use(
 //JSON for all other routes
 app.use(express.json());
 
-// DB
+//DB
 connectDB();
 
-// Routes
+//Routes
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/foods", require("./routes/food.routes"));
 app.use("/api/cart", require("./routes/cart.routes"));
