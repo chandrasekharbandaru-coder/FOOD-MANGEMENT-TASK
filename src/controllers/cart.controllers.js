@@ -16,7 +16,7 @@ exports.addToCart = async (req, res) => {
       });
     }
 
-    // 🔐 JWT check
+    //JWT check
     if (userId !== tokenUserId) {
       return res.status(403).json({ message: "User ID mismatch" });
     }
@@ -31,7 +31,7 @@ exports.addToCart = async (req, res) => {
       });
     }
 
-    /* ✅ FIXED FOOD LOOKUP */
+    /*FIXED FOOD LOOKUP */
     let food;
 
     // Try Mongo _id
@@ -155,11 +155,11 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-//Task 19: Remove Item from Car
+//Task 19: Remove Item from Cart
 exports.removeItemFromCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { foodId } = req.params;
+    const { foodId } = req.query;
 
     const cart = await Cart.findOne({ userId });
     if (!cart) {

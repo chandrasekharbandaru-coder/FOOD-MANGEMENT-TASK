@@ -1,6 +1,5 @@
 const Food = require("../models/food.model");
 const axios = require("../utils/axios");
-
 //SYNC FOODS
 exports.syncFoods = async (req, res) => {
   try {
@@ -45,7 +44,6 @@ exports.syncFoods = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // ========== GET FOODS (ALL / SINGLE / FILTER / SORT / PAGINATION / AREAS) ==========
 exports.getAllFoods = async (req, res) => {
   try {

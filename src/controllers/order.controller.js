@@ -1,7 +1,6 @@
 const Order = require("../models/order.model");
 const Cart = require("../models/cart.model");
 const mongoose = require("mongoose");
-
 /* =================================
    Task 22: Place Order (JWT + userId)
    POST /api/orders/place
