@@ -21,7 +21,7 @@ router.get("/", authMiddleware, getCart);
 router.put("/update", authMiddleware, updateCartItem);
 
 // Task 19
-router.delete("/remove/:foodId", authMiddleware, removeItemFromCart);
+router.delete("/remove", authMiddleware, removeItemFromCart);
 
 // Task 20
 router.delete("/clear", authMiddleware, clearCart);
